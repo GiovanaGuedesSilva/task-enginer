@@ -1,0 +1,15 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Annotations scripts
+scripts/initial.sh
+
+# Environment variables
+.env
+
+# Temporary annotations
+*.md
