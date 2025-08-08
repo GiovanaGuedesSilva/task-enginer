@@ -86,31 +86,31 @@ func LoadConfig() (*Config, error) {
 }
 
 func (c *Config) GetDatabaseURL() string {
-    return fmt.Sprintf(
-        "host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-        c.Database.Host,
-        c.Database.Port,
-        c.Database.User,
-        c.Database.Password,
-        c.Database.Name,
-        c.Database.SSLMode,
-    )
+	return fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		c.Database.Host,
+		c.Database.Port,
+		c.Database.User,
+		c.Database.Password,
+		c.Database.Name,
+		c.Database.SSLMode,
+	)
 }
 
 func (c *Config) GetRedisURL() string {
-    if c.Redis.Password != "" {
-        return fmt.Sprintf("redis://:%s@%s:%s/%d",
-            c.Redis.Password,
-            c.Redis.Host,
-            c.Redis.Port,
-            c.Redis.DB,
-        )
-    }
-    return fmt.Sprintf("redis://%s:%s/%d",
-        c.Redis.Host,
-        c.Redis.Port,
-        c.Redis.DB,
-    )
+	if c.Redis.Password != "" {
+		return fmt.Sprintf("redis://:%s@%s:%s/%d",
+			c.Redis.Password,
+			c.Redis.Host,
+			c.Redis.Port,
+			c.Redis.DB,
+		)
+	}
+	return fmt.Sprintf("redis://%s:%s/%d",
+		c.Redis.Host,
+		c.Redis.Port,
+		c.Redis.DB,
+	)
 }
 
 func getEnv(key string) string {

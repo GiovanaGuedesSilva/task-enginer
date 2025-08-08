@@ -13,3 +13,6 @@ scripts/initial.sh
 
 # Temporary annotations
 *.md
+
+# Temporary Makefile copies
+Makefile copy*
