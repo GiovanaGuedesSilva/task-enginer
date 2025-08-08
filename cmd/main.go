@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"task-engine/config"
+	"task-engine/pkg/logger"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -13,4 +16,7 @@ func main() {
 
 	fmt.Println("Database URL:", cfg.GetDatabaseURL())
 	fmt.Println("Redis URL:", cfg.GetRedisURL())
+
+	r := gin.New()
+	r.Use(logger.GinLogger())
 }
