@@ -12,7 +12,7 @@ GO := go
 DB_URL := postgres://postgres:password@localhost:5432/task_engine?sslmode=disable
 MIGRATIONS_DIR := ./migrations
 
-.PHONY: help build run test clean deps setup docker-up docker-down dev-full stop migrate-up migrate-down migrate-create migrate-force
+.PHONY: help build run test clean deps setup docker-up docker-down dev-full stop migrate-up migrate-down migrate-create migrate-force migrate-status migrate-script
 
 .DEFAULT_GOAL := help
 
@@ -65,6 +65,8 @@ docker-down: ## Stop Docker services
 	docker-compose down
 	@echo "Docker services stopped"
 
+# ===================================================== MIGRATION COMMANDS
+
 migrate-up: ## Run database migrations up
 	@echo "Running database migrations up..."
 	migrate -path $(MIGRATIONS_DIR) -database "$(DB_URL)" up
@@ -85,12 +87,75 @@ migrate-create: ## Create new migration (use: make migrate-create NAME=migration
 	migrate create -ext sql -dir $(MIGRATIONS_DIR) -seq $(NAME)
 	@echo "Migration created: $(NAME)"
 
+migrate-status: ## Show migration status
+	@echo "Migration status:"
+	migrate -path $(MIGRATIONS_DIR) -database "$(DB_URL)" version
+
+# ===================================================== MIGRATION SCRIPT COMMANDS (Alternative)
+
+migrate-script-up: ## Run migrations using script (up)
+	@echo "Running migrations using script..."
+	@chmod +x scripts/run-migrations.sh
+	./scripts/run-migrations.sh up
+
+migrate-script-down: ## Run migrations using script (down)
+	@echo "Running migrations rollback using script..."
+	@chmod +x scripts/run-migrations.sh
+	./scripts/run-migrations.sh down
+
+migrate-script-force: ## Force migration using script (use: make migrate-script-force VERSION=1)
+	@echo "Forcing migration using script..."
+	@chmod +x scripts/run-migrations.sh
+	VERSION=$(VERSION) ./scripts/run-migrations.sh force
+
+migrate-script-create: ## Create migration using script (use: make migrate-script-create NAME=migration_name)
+	@echo "Creating migration using script..."
+	@chmod +x scripts/run-migrations.sh
+	NAME=$(NAME) ./scripts/run-migrations.sh create
+
+migrate-script-status: ## Show migration status using script
+	@echo "Migration status using script:"
+	@chmod +x scripts/run-migrations.sh
+	./scripts/run-migrations.sh status
+
+# ===================================================== DEVELOPMENT COMMANDS
+
+dev-full: docker-up deps migrate-up run ## Start full development environment
+
+dev-without-migrate: docker-up deps run ## Start development environment without migrations
+
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
 	$(GO) clean
 	@rm -rf $(BIN_DIR)
 	@echo "Cleaned"
 
-dev-full: docker-up deps migrate-up run ## Start full development environment
-
 stop: docker-down clean ## Stop all services and clean
+
+# ===================================================== UTILITY COMMANDS
+
+install-migrate: ## Install migrate tool
+	@echo "Installing migrate tool..."
+	@if ! command -v migrate &> /dev/null; then \
+		echo "Installing migrate via curl..."; \
+		curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.3/migrate.linux-amd64.tar.gz | tar xvz; \
+		sudo mv migrate /usr/local/bin/; \
+		echo "Migrate installed successfully"; \
+	else \
+		echo "Migrate is already installed"; \
+	fi
+
+check-db: ## Check database connection
+	@echo "Checking database connection..."
+	@if pg_isready -h localhost -p 5432 -U postgres > /dev/null 2>&1; then \
+		echo "Database is ready ✓"; \
+	else \
+		echo "Database is not ready. Start with: make docker-up"; \
+		exit 1; \
+	fi
+
+logs: ## Show Docker logs
+	@echo "Showing Docker logs..."
+	docker-compose logs -f
+
+restart: stop dev-full ## Restart all services
